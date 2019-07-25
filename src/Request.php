@@ -16,42 +16,35 @@ class Request {
      *
      * @param string
     **/
-    public static $cookie_file;
+    public $cookie_file;
     
     /**
      * Determines whether or not requests should follow redirects
      *
      * @param boolean
     **/
-    public static $follow_redirects = true;
-    
-    /**
-     * An associative array of headers to send along with requests
-     *
-     * @param array
-    **/
-    public static $headers = array();
+    public $follow_redirects = true;
     
     /**
      * An associative array of CURLOPT options to send along with requests
      *
      * @param array
     **/
-    public static $options = array();
+    public $options = array();
     
     /**
      * The referer header to send along with requests
      *
      * @param string
     **/
-    public static $referer;
+    public $referer;
     
     /**
      * The user agent to send along with requests
      *
      * @param string
     **/
-    public static $user_agent;
+    public $user_agent;
     
     /**
      * Stores an error string for the last request if one occurred
@@ -59,7 +52,7 @@ class Request {
      * @param string
      * @access protected
     **/
-    protected static $error = '';
+    protected $error = '';
     
     /**
      * Stores resource handle for the current CURL request
@@ -67,7 +60,7 @@ class Request {
      * @param resource
      * @access protected
     **/
-    protected static $request;
+    protected $request;
     
     /**
      * Initializes a Curl object
@@ -76,21 +69,21 @@ class Request {
      * Also sets the $user_agent to $_SERVER['HTTP_USER_AGENT'] if it exists, 'Curl/PHP '.PHP_VERSION.' (http://github.com/shuber/curl)' otherwise
     **/
     function __construct() {
-        self::$cookie_file = dirname(__FILE__).DIRECTORY_SEPARATOR.'curl_cookie.txt';
-        self::$user_agent = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : 'Curl/PHP '.PHP_VERSION.' (http://github.com/shuber/curl)';
+        $this->cookie_file = dirname(__FILE__).DIRECTORY_SEPARATOR.'curl_cookie.txt';
+        $this->user_agent = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : 'Curl/PHP '.PHP_VERSION.' (http://github.com/shuber/curl)';
     }
     
     /**
      * Makes an HTTP DELETE request to the specified $url with an optional array or string of $vars
      *
-     * Returns a CurlResponse object if the request was successful, false otherwise
+     * Returns a Response object if the request was successful, false otherwise
      *
      * @param string $url
      * @param array|string $vars 
-     * @return CurlResponse object
+     * @return Response object
     **/
     function delete($url, $vars = array()) {
-        return self::request('DELETE', $url, $vars);
+        return $this->request('DELETE', $url, $vars);
     }
     
     /**
@@ -99,37 +92,37 @@ class Request {
      * @return string
     **/
     function error() {
-        return self::$error;
+        return $this->error;
     }
     
     /**
      * Makes an HTTP GET request to the specified $url with an optional array or string of $vars
      *
-     * Returns a CurlResponse object if the request was successful, false otherwise
+     * Returns a Response object if the request was successful, false otherwise
      *
      * @param string $url
      * @param array|string $vars 
-     * @return CurlResponse
+     * @return Response
     **/
     function get($url, $vars = array()) {
         if (!empty($vars)) {
             $url .= (stripos($url, '?') !== false) ? '&' : '?';
             $url .= (is_string($vars)) ? $vars : http_build_query($vars, '', '&');
         }
-        return self::request('GET', $url);
+        return $this->request('GET', $url);
     }
     
     /**
      * Makes an HTTP HEAD request to the specified $url with an optional array or string of $vars
      *
-     * Returns a CurlResponse object if the request was successful, false otherwise
+     * Returns a Response object if the request was successful, false otherwise
      *
      * @param string $url
      * @param array|string $vars
-     * @return CurlResponse
+     * @return Response
     **/
     function head($url, $vars = array()) {
-        return self::request('HEAD', $url, $vars);
+        return $this->request('HEAD', $url, $vars);
     }
     
     /**
@@ -137,53 +130,53 @@ class Request {
      *
      * @param string $url
      * @param array|string $vars 
-     * @return CurlResponse|boolean
+     * @return Response|boolean
     **/
     function post($url, $vars = array()) {
-        return self::request('POST', $url, $vars);
+        return $this->request('POST', $url, $vars);
     }
     
     /**
      * Makes an HTTP PUT request to the specified $url with an optional array or string of $vars
      *
-     * Returns a CurlResponse object if the request was successful, false otherwise
+     * Returns a Response object if the request was successful, false otherwise
      *
      * @param string $url
      * @param array|string $vars 
-     * @return CurlResponse|boolean
+     * @return Response|boolean
     **/
     function put($url, $vars = array()) {
-        return self::request('PUT', $url, $vars);
+        return $this->request('PUT', $url, $vars);
     }
     
     /**
      * Makes an HTTP request of the specified $method to a $url with an optional array or string of $vars
      *
-     * Returns a CurlResponse object if the request was successful, false otherwise
+     * Returns a Response object if the request was successful, false otherwise
      *
      * @param string $method
      * @param string $url
      * @param array|string $vars
-     * @return CurlResponse|boolean
+     * @return Response|boolean
     **/
     function request($method, $url, $vars = array()) {
-        self::$error = '';
-        self::$request = curl_init();
+        $this->error = '';
+        $this->request = curl_init();
         if (is_array($vars)) $vars = http_build_query($vars, '', '&');
         
-        self::$set_request_method($method);
-        self::$set_request_options($url, $vars);
-        self::$set_request_headers();
+        $this->set_request_method($method);
+        $this->set_request_options($url, $vars);
+        $this->headers();
         
-        $response = curl_exec(self::$request);
+        $response = curl_exec($this->request);
         
         if ($response) {
-            $response = new CurlResponse($response);
+            $response = new Response($response);
         } else {
-            self::$error = curl_errno(self::$request).' - '.curl_error(self::$request);
+            $this->error = curl_errno($this->request).' - '.curl_error($this->request);
         }
         
-        curl_close(self::$request);
+        curl_close($this->request);
         
         return $response;
     }
@@ -194,12 +187,18 @@ class Request {
      * @return void
      * @access protected
     **/
-    protected static function set_request_headers() {
+    protected function headers($request_headers = array()) {
+        $this->headers = $request_headers;
         $headers = array();
-        foreach (self::$headers as $key => $value) {
+        foreach ($this->headers as $key => $value) {
             $headers[] = $key.': '.$value;
         }
-        curl_setopt(self::$request, CURLOPT_HTTPHEADER, $headers);
+
+        if (!empty($headers)) {
+            curl_setopt($this->request, CURLOPT_HTTPHEADER, $headers);
+        }
+
+        return $this;
     }
     
     /**
@@ -209,19 +208,19 @@ class Request {
      * @return void
      * @access protected
     **/
-    protected static function set_request_method($method) {
+    protected function set_request_method($method) {
         switch (strtoupper($method)) {
             case 'HEAD':
-                curl_setopt(self::$request, CURLOPT_NOBODY, true);
+                curl_setopt($this->request, CURLOPT_NOBODY, true);
                 break;
             case 'GET':
-                curl_setopt(self::$request, CURLOPT_HTTPGET, true);
+                curl_setopt($this->request, CURLOPT_HTTPGET, true);
                 break;
             case 'POST':
-                curl_setopt(self::$request, CURLOPT_POST, true);
+                curl_setopt($this->request, CURLOPT_POST, true);
                 break;
             default:
-                curl_setopt(self::$request, CURLOPT_CUSTOMREQUEST, $method);
+                curl_setopt($this->request, CURLOPT_CUSTOMREQUEST, $method);
         }
     }
     
@@ -233,24 +232,24 @@ class Request {
      * @return void
      * @access protected
     **/
-    protected static function set_request_options($url, $vars) {
-        curl_setopt(self::$request, CURLOPT_URL, $url);
-        if (!empty($vars)) curl_setopt(self::$request, CURLOPT_POSTFIELDS, $vars);
+    protected function set_request_options($url, $vars) {
+        curl_setopt($this->request, CURLOPT_URL, $url);
+        if (!empty($vars)) curl_setopt($this->request, CURLOPT_POSTFIELDS, $vars);
         
         # Set some default CURL options
-        curl_setopt(self::$request, CURLOPT_HEADER, true);
-        curl_setopt(self::$request, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt(self::$request, CURLOPT_USERAGENT, self::$user_agent);
-        if (self::$cookie_file) {
-            curl_setopt(self::$request, CURLOPT_COOKIEFILE, self::$cookie_file);
-            curl_setopt(self::$request, CURLOPT_COOKIEJAR, self::$cookie_file);
+        curl_setopt($this->request, CURLOPT_HEADER, true);
+        curl_setopt($this->request, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($this->request, CURLOPT_USERAGENT, $this->user_agent);
+        if ($this->cookie_file) {
+            curl_setopt($this->request, CURLOPT_COOKIEFILE, $this->cookie_file);
+            curl_setopt($this->request, CURLOPT_COOKIEJAR, $this->cookie_file);
         }
-        if (self::$follow_redirects) curl_setopt(self::$request, CURLOPT_FOLLOWLOCATION, true);
-        if (self::$referer) curl_setopt(self::$request, CURLOPT_REFERER, self::$referer);
+        if ($this->follow_redirects) curl_setopt($this->request, CURLOPT_FOLLOWLOCATION, true);
+        if ($this->referer) curl_setopt($this->request, CURLOPT_REFERER, $this->referer);
         
         # Set any custom CURL options
-        foreach (self::$options as $option => $value) {
-            curl_setopt(self::$request, constant('CURLOPT_'.str_replace('CURLOPT_', '', strtoupper($option))), $value);
+        foreach ($this->options as $option => $value) {
+            curl_setopt($this->request, constant('CURLOPT_'.str_replace('CURLOPT_', '', strtoupper($option))), $value);
         }
     }
 }
