@@ -25,7 +25,7 @@ $get    = Request::headers(array('key' => 'val'))->get($url, array('key1' => 'va
 A normal CURL request will return the headers and the body in one response string. This class parses the two and places them into separate properties.
 
 ```php
-$response = $curl->get('google.com');
+$response = Request::get('google.com');
 echo $response->body; # Contains everything in the response except for the headers
 print_r($response->headers); # Associative array containing the response headers
 ```
