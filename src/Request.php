@@ -82,8 +82,9 @@ class Request {
      * @param array|string $vars 
      * @return Response object
     **/
-    function delete($url, $vars = array()) {
-        return $this->request('DELETE', $url, $vars);
+    protected static function delete($url, $vars = array()) {
+        $self = new self;         
+        return $self->request('DELETE', $url, $vars);
     }
     
     /**
@@ -91,8 +92,32 @@ class Request {
      *
      * @return string
     **/
-    function error() {
+    protected function error() {
         return $this->error;
+    }
+    
+    /**
+     * Sets user agent
+     *
+     * @return string
+    **/
+    protected static function user_agent($agent) {
+        $self = new self;
+        $self->user_agent = $agent;
+
+        return __CLASS__ ;
+    }
+    
+    /**
+     * Sets user agent
+     *
+     * @return string
+    **/
+    protected static function referer($referer) {
+        $self = new self;
+        $self->referer = $referer;
+
+        return __CLASS__ ;
     }
     
     /**
@@ -104,12 +129,14 @@ class Request {
      * @param array|string $vars 
      * @return Response
     **/
-    function get($url, $vars = array()) {
+    protected static function get($url, $vars = array()) {
         if (!empty($vars)) {
             $url .= (stripos($url, '?') !== false) ? '&' : '?';
             $url .= (is_string($vars)) ? $vars : http_build_query($vars, '', '&');
         }
-        return $this->request('GET', $url);
+
+        $self = new self;
+        return $self->request('GET', $url);
     }
     
     /**
@@ -121,8 +148,9 @@ class Request {
      * @param array|string $vars
      * @return Response
     **/
-    function head($url, $vars = array()) {
-        return $this->request('HEAD', $url, $vars);
+    protected static function head($url, $vars = array()) {
+        $self = new self;         
+        return $self->request('HEAD', $url, $vars);
     }
     
     /**
@@ -132,8 +160,9 @@ class Request {
      * @param array|string $vars 
      * @return Response|boolean
     **/
-    function post($url, $vars = array()) {
-        return $this->request('POST', $url, $vars);
+    protected static function post($url, $vars = array()) {
+        $self = new self;         
+        return $self->request('POST', $url, $vars);
     }
     
     /**
@@ -145,8 +174,9 @@ class Request {
      * @param array|string $vars 
      * @return Response|boolean
     **/
-    function put($url, $vars = array()) {
-        return $this->request('PUT', $url, $vars);
+    protected static function put($url, $vars = array()) {
+        $self = new self;         
+        return $self->request('PUT', $url, $vars);
     }
     
     /**
@@ -159,20 +189,24 @@ class Request {
      * @param array|string $vars
      * @return Response|boolean
     **/
-    function request($method, $url, $vars = array()) {
+    protected function request($method, $url, $vars = array()) {
         $this->error = '';
         $this->request = curl_init();
         if (is_array($vars)) $vars = http_build_query($vars, '', '&');
         
         $this->set_request_method($method);
         $this->set_request_options($url, $vars);
-        $this->headers();
+
+        if (!empty($this->headers)) {
+            curl_setopt($self->request, CURLOPT_HTTPHEADER, $headers);
+        }
         
         $response = curl_exec($this->request);
         
         if ($response) {
             $response = new Response($response);
         } else {
+            //return new Exception(curl_error($this->request), curl_errno($this->request));
             $this->error = curl_errno($this->request).' - '.curl_error($this->request);
         }
         
@@ -187,18 +221,15 @@ class Request {
      * @return void
      * @access protected
     **/
-    protected function headers($request_headers = array()) {
-        $this->headers = $request_headers;
+    protected static function headers($request_headers = array()) {
+        $self = new self;
         $headers = array();
-        foreach ($this->headers as $key => $value) {
+        foreach ($request_headers as $key => $value) {
             $headers[] = $key.': '.$value;
         }
+        $self->headers = $request_headers;
 
-        if (!empty($headers)) {
-            curl_setopt($this->request, CURLOPT_HTTPHEADER, $headers);
-        }
-
-        return $this;
+        return __CLASS__ ;
     }
     
     /**
