@@ -1,4 +1,3 @@
-
 <?php
 namespace Osen;
 /**
@@ -28,7 +27,7 @@ class Response {
      * Accepts the result of a curl request as a string
      *
      * <code>
-     * $response = new CurlResponse(curl_exec($curl_handle));
+     * $response = new Response(curl_exec($curl_handle));
      * echo $response->body;
      * echo $response->headers['Status'];
      * </code>
